@@ -7,11 +7,20 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-int
-	wd = 800,
-	ht = 600;
+std::map<
+	std::string,
+	int
+> sz = {
+	{
+		"wd",
+		800
+	}, {
+		"ht",
+		600
+	}
+};
 
-std::vector<SDL_Texture*> texture;
+std::vector<SDL_Texture*> tex;
 std::vector<SDL_Rect> rect;
 
 std::vector<std::string> rd(
@@ -46,7 +55,7 @@ void get_txt_and_rect(
 		> pos,
 		char* txt,
 		TTF_Font* font,
-		SDL_Texture** tex,
+		SDL_Texture** texture,
 		SDL_Rect* rect
 	) {
 		SDL_Surface* surf;
@@ -62,7 +71,7 @@ void get_txt_and_rect(
 			txt,
 			col
 		);
-		*tex = SDL_CreateTextureFromSurface(
+		*texture = SDL_CreateTextureFromSurface(
 			rend,
 			surf
 		);
@@ -77,6 +86,24 @@ void get_txt_and_rect(
 		rect->h = surf->h;
 }
 
+int run = true;
+void handle_key(
+	SDL_Event e
+) {
+	if (e.type == SDL_KEYDOWN) {
+		switch (e.key.keysym.sym) {
+			case SDLK_y:
+				run = false;
+
+			case SDLK_n:
+				run = false;
+
+			case SDLK_ESCAPE:
+				run = false;
+		}
+	}
+}
+
 int main() {
 	std::vector<std::string> word = rd("intro");
 
@@ -84,13 +111,13 @@ int main() {
 
 	for (
 		int i = 0;
-		i < 3;
+		i < 1000; // todo fix whatever this is
 		i++
 	) {
-		SDL_Texture* theTexture;
+		SDL_Texture* theTex;
 
-		texture.push_back(
-			theTexture
+		tex.push_back(
+			theTex
 		);
 
 		SDL_Rect theRect;
@@ -105,8 +132,8 @@ int main() {
 
 	SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer(
-		wd,
-		ht,
+		sz["wd"],
+		sz["ht"],
 		0,
 		&win,
 		&rend
@@ -145,27 +172,31 @@ int main() {
 			pos,
 			(char*) word[i].c_str(),
 			font,
-			&texture[i],
+			&tex[i],
 			&rect[i]
 		);
 	}
 
-	SDL_Event event;
-
-	int run = true;
-
+	SDL_Event e;
 	while (run) {
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
+		while (SDL_PollEvent(&e)) {
+			if (e.type == SDL_QUIT) {
 				run = false;
 			}
+
+			handle_key(
+				e
+			);
 		}
 
 		SDL_SetRenderDrawColor(
 			rend,
+			/* 36, */
+			/* 39, */
+			/* 35, */
+			34,
 			36,
-			39,
-			35,
+			32,
 			0
 		);
 		SDL_RenderClear(
@@ -179,7 +210,7 @@ int main() {
 		) {
 			SDL_RenderCopy(
 				rend,
-				texture[i],
+				tex[i],
 				NULL,
 				&rect[i]
 			);
@@ -192,11 +223,11 @@ int main() {
 
 	for (
 		int i = 0;
-		i < 3;
+		i < tex.size();
 		i++
 	) {
 		SDL_DestroyTexture(
-			texture[i]
+			tex[i]
 		);
 	}
 
