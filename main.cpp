@@ -1,8 +1,10 @@
-#include <stdlib.h>
 #include <vector>
 #include <string>
 #include <fstream>
 #include <map>
+
+#include <ctime>
+#include <iostream>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -86,32 +88,158 @@ void get_txt_and_rect(
 		rect->h = surf->h;
 }
 
+SDL_Renderer* rend;
+void print(
+	std::vector<std::string> p
+) {
+	TTF_Font* font = TTF_OpenFont(
+		"terminus.bdf",
+		24
+	);
+
+	for (
+		int i = 0;
+		i < p.size();
+		i++
+	) {
+		std::map<
+			char,
+			int
+		> pos = {
+			{
+				'x',
+				0
+			},
+			{
+				'y',
+				i * 32
+			}
+		};
+
+		get_txt_and_rect(
+			rend,
+			pos,
+			(char*) p[i].c_str(),
+			font,
+			&tex[i],
+			&rect[i]
+		);
+	}
+}
+
+// loop
 int run = true;
+
+std::string input;
+std::vector<std::string> bff;
+
 void handle_key(
 	SDL_Event e
 ) {
 	if (e.type == SDL_KEYDOWN) {
+		char c;
+
 		switch (e.key.keysym.sym) {
+			case SDLK_0:
+			case SDLK_1:
+			case SDLK_2:
+			case SDLK_3:
+			case SDLK_4:
+			case SDLK_5:
+			case SDLK_6:
+			case SDLK_7:
+			case SDLK_8:
+			case SDLK_9:
+
+			case SDLK_a:
+			case SDLK_b:
+			case SDLK_c:
+			case SDLK_d:
+			case SDLK_e:
+			case SDLK_f:
+			case SDLK_g:
+			case SDLK_h:
+			case SDLK_i:
+			case SDLK_j:
+			case SDLK_k:
+			case SDLK_l:
+			case SDLK_m:
+			case SDLK_o:
+			case SDLK_p:
+			case SDLK_q:
+			case SDLK_r:
+			case SDLK_s:
+			case SDLK_t:
+			case SDLK_u:
+			case SDLK_v:
+			case SDLK_w:
+			case SDLK_x:
 			case SDLK_y:
-				run = false;
+			case SDLK_z:
 
-			case SDLK_n:
-				run = false;
+			case SDLK_SPACE: {
+				c = (char) e.key.keysym.sym;
 
-			case SDLK_ESCAPE:
-				run = false;
+				input += c;
+
+				char* prompt = "*= ";
+
+				std::vector<
+					std::string
+				> l;
+				l.push_back(prompt + input + '_');
+				print(l);
+
+				break;
+			}
+
+			case SDLK_BACKSPACE: {
+				input = input.substr(0, input.size() - 1);
+
+				char* prompt = "*= ";
+
+				std::vector<
+					std::string
+				> l;
+				l.push_back(prompt + input + '_');
+				print(l);
+
+				break;
+			}
+
+			case SDLK_RETURN:
+				bff.push_back(input);
+				print(bff);
+
+				input = "";
+
+				char* prompt = "*= ";
+
+				std::vector<
+					std::string
+				> l;
+				l.push_back(prompt + input + '_');
+				print(l);
+
+				break;
+
+			// respond
+			/* case SDLK_y: */
+			/* 	run = false; */
+
+			/* case SDLK_n: */
+			/* 	run = false; */
+
+			/* case SDLK_ESCAPE: */
+				/* run = false; */
 		}
 	}
 }
 
 int main() {
-	std::vector<std::string> word = rd("intro");
-
-	SDL_Renderer* rend;
-
 	for (
 		int i = 0;
-		i < 1000; // todo fix whatever this is
+		i < 10000; // todo fix whatever this is
 		i++
 	) {
 		SDL_Texture* theTex;
@@ -139,56 +267,89 @@ int main() {
 		&rend
 	);
 
-	// text
-	char* name = "terminus.bdf";
-
+	/* text */
 	TTF_Init();
 	TTF_Font* font = TTF_OpenFont(
-		name,
+		"terminus.bdf",
 		24
 	);
 
-	for (
-		int i = 0;
-		i < word.size();
-		i++
-	) {
-		std::map<
-			char,
-			int
-		> pos = {
+	// status bar
+	time_t now;
+	time(&now);
+
+	char buff[1024];
+	strftime(
+		buff,
+		sizeof buff,
+		"%F %H:%M",
+		gmtime(&now)
+	);
+
+	get_txt_and_rect(
+		rend,
+		{
 			{
 				'x',
 				0
-			},
-			{
+			}, {
 				'y',
-				i * 32
+				0
 			}
-		};
+		},
+		buff,
+		font,
+		&tex[0],
+		&rect[0]
+	);
 
-		get_txt_and_rect(
-			rend,
-			pos,
-			(char*) word[i].c_str(),
-			font,
-			&tex[i],
-			&rect[i]
-		);
-	}
+	// upper content
+	std::vector<
+		std::string
+	>	head = rd("head");
 
+	std::vector<
+		std::string
+	>	intro = rd("intro");
+
+	/* print(head); */
+	/* print(intro); */
+
+	// I
+	char* prompt = "*= ";
+
+	get_txt_and_rect(
+		rend,
+		{
+			{
+				'x',
+				0
+			}, {
+				'y',
+				0
+			}
+		},
+		prompt,
+		font,
+		&tex[0],
+		&rect[0]
+	);
+
+	// loop
 	SDL_Event e;
 	while (run) {
+		// event
 		while (SDL_PollEvent(&e)) {
-			if (e.type == SDL_QUIT) {
-				run = false;
-			}
-
 			handle_key(
 				e
 			);
+
+			if (e.type == SDL_QUIT) {
+				run = false;
+			}
 		}
 
+		// background
 		SDL_SetRenderDrawColor(
 			rend,
 			/* 36, */
@@ -205,7 +366,7 @@ int main() {
 
 		for (
 			int i = 0;
-			i < word.size();
+			i < 1000;
 			i++
 		) {
 			SDL_RenderCopy(
